@@ -1,0 +1,315 @@
+*******************customer and purchase online store*****************
+
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.model_selection import train_test_split
+
+# Load the dataset
+data = pd.read_csv('customer_purchases.csv')
+
+# Perform any necessary data cleaning steps
+
+# Handle missing values in 'Age'
+data['Age'].fillna(data['Age'].mean(), inplace=True)
+
+# Handle missing values in 'Gender'
+data['Gender'].fillna('Other', inplace=True)
+
+# Perform one-hot encoding for 'Gender' column
+data = pd.get_dummies(data, columns=['Gender'], prefix='Gender', drop_first=True)
+
+# Split the dataset into features and labels
+X = data.drop(['CustomerID', 'Name', 'ProductID', 'PurchaseAmount'], axis=1)
+y = data['PurchaseAmount']
+
+# Perform feature scaling
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+
+# Print the shapes of the training and testing sets
+print("Training set shape:", X_train.shape)
+print("Testing set shape:", X_test.shape)
+
+
+
+
+
+********************code for manipulating twitter datset*****************
+import pandas as pd
+
+# Load the data
+data = pd.read_csv('twitter_dataset.csv')
+
+# Drop the 'TweetID' column
+data = data.drop('TweetID', axis=1)
+
+# Group data by 'Author' and aggregate the sum of 'Likes' and 'Retweets'
+data.groupby('Username').agg({'Likes': 'sum', 'Retweets': 'sum'})
+
+# Slice the dataset to display the first 5 rows of the 'TweetText' column
+data.iloc[:5, 1]
+
+# Describe the 'Followers' column
+desc = data['Followers'].describe()
+
+# Display the describe results
+print(desc)
+
+# Drop a specific row (row with index 2)
+data = data.drop(2, axis=0)
+
+# Rename the 'Timestamp' column to 'TweetTimestamp'
+data = data.rename(columns={'Timestamp': 'TweetTimestamp'})
+
+# Access column names
+columns = data.columns
+print(columns)
+
+***********************Evaaluting machine learning models telecom ***************************
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, roc_auc_score, roc_curve, auc
+import matplotlib.pyplot as plt
+
+# Load the dataset
+data = pd.read_csv('customer_churn_data.csv')
+
+# Extract features and target variable
+X = data[['MonthlyCharges', 'TotalCharges', 'TenureMonths']]
+y = data['Churn']
+
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+
+# Standardize features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Initialize classifiers
+classifiers = {
+    'Logistic Regression': LogisticRegression(random_state=0),
+    'Random Forest': RandomForestClassifier(random_state=0),
+    'Support Vector Machine': SVC(probability=True, random_state=0),
+    'Gradient Boosting': GradientBoostingClassifier(random_state=0)
+}
+
+# Evaluate each classifier
+for clf_name, clf in classifiers.items():
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+    y_prob = clf.predict_proba(X_test)[:, 1]  # Probability of positive class for ROC-AUC
+
+    accuracy = accuracy_score(y_test, y_pred)
+    roc_auc = roc_auc_score(y_test, y_prob)
+
+    print(f'{clf_name} Results:')
+    print(f'Accuracy: {accuracy:.4f}')
+    print(f'ROC-AUC: {roc_auc:.4f}')
+    print()
+
+    # Plot ROC curve
+    fpr, tpr, _ = roc_curve(y_test, y_prob)
+    roc_auc = auc(fpr, tpr)
+    plt.figure()
+    plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title(f'{clf_name} ROC Curve')
+    plt.legend(loc='lower right')
+    plt.show()
+
+
+
+
+**************************correlation analysis of the Advertisex*************************************
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.linear_model import LinearRegression
+
+# Load your dataset
+data = pd.read_csv('advertising_sales_data.csv')  # Replace 'your_dataset.csv' with the actual file path
+
+# Assuming your dataset has columns named as follows:
+# 'Month': months,
+# 'AdvertisingExpenditure': advertising_expenditure,
+# 'SalesRevenue': sales_revenue
+
+# Calculate the correlation matrix
+correlation_matrix = data.corr()
+
+# Visualize the correlation matrix using a heatmap
+plt.figure(figsize=(8, 6))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5)
+plt.title("Correlation Matrix")
+plt.show()
+
+# Calculate the correlation coefficient between advertising expenditure and sales revenue
+correlation_coefficient = data['AdvertisingExpenditure'].corr(data['SalesRevenue'])
+print("Correlation Coefficient between Advertising Expenditure and Sales Revenue:", correlation_coefficient)
+
+# Perform linear regression to model the relationship
+X = data[['AdvertisingExpenditure']]
+y = data['SalesRevenue']
+
+# Create and fit the linear regression model
+model = LinearRegression()
+model.fit(X, y)
+
+# Predict sales revenue based on advertising expenditure
+predicted_sales = model.predict(X)
+
+# Plot the regression line
+plt.figure(figsize=(8, 6))
+plt.scatter(data['AdvertisingExpenditure'], data['SalesRevenue'], color='blue', label='Actual Data')
+plt.plot(data['AdvertisingExpenditure'], predicted_sales, color='red', linewidth=2, label='Regression Line')
+plt.xlabel('Advertising Expenditure')
+plt.ylabel('Sales Revenue')
+plt.legend()
+plt.title('Advertising Expenditure vs. Sales Revenue')
+plt.show()
+
+# Evaluate the model's performance (you can use various metrics here)
+# For example, you can calculate the R-squared value
+r_squared = model.score(X, y)
+print("R-squared:", r_squared)
+
+#################or##################
+import pandas as pd
+
+# Load your dataset
+data = pd.read_csv('advertising_sales_data.csv')  # Replace 'your_dataset.csv' with the actual file path
+
+# Assuming your dataset has columns named as follows:
+# 'Month': months,
+# 'AdvertisingExpenditure': advertising_expenditure,
+# 'SalesRevenue': sales_revenue
+
+# Calculate the correlation coefficient between advertising expenditure and sales revenue
+correlation_coefficient = data['AdvertisingExpenditure'].corr(data['SalesRevenue'])
+
+print("Correlation Coefficient between Advertising Expenditure and Sales Revenue:", correlation_coefficient)
+
+
+
+
+***************************classification code for the creaditgaurd default or not************************************
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+# Load your dataset
+data = pd.read_csv("loan_default_data.csv")  # Replace 'your_dataset.csv' with the actual file path
+
+# Assuming your dataset has columns named as follows:
+# 'ApplicantID': applicant_ids,
+# 'Age': age,
+# 'Income': income,
+# 'CreditScore': credit_score,
+# 'Defaulted': defaulted
+
+X = data[['Age', 'Income', 'CreditScore']].values
+y = data['Defaulted'].values
+
+from sklearn.model_selection import train_test_split 
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
+from sklearn.preprocessing import StandardScaler
+sc = StandardScaler()
+X_train = sc.fit_transform(X_train)
+X_test = sc.transform(X_test)
+
+from sklearn.svm import SVC
+classifier = SVC(kernel='rbf', random_state=0)
+classifier.fit(X_train, y_train)
+
+y_pred = classifier.predict(X_test)
+
+from sklearn.metrics import confusion_matrix, accuracy_score
+cm = confusion_matrix(y_test, y_pred)
+print("Confusion Matrix:")
+print(cm)
+
+accuracy = accuracy_score(y_test, y_pred)
+print("Accuracy:", accuracy)
+
+# Print predictions and actual outcomes
+for i in range(len(y_test)):
+    print(f"Applicant {i + 1}: Actual - {'Default' if y_test[i] == 1 else 'Not Default'}, Predicted - {'Default' if y_pred[i] == 1 else 'Not Default'}")
+
+
+
+*********************************************Mongo Db nosql Shop Ease*****************************
+# Show existing databases
+show dbs
+
+# Create or switch to the ShopEase database
+use shop_ease
+
+# Create a collection for products
+db.createCollection("products")
+
+# Insert a single product document
+db.products.insertOne({
+    name: "Product 1",
+    price: 19.99,
+    category: "Electronics",
+    quantity: 100
+})
+
+# Insert multiple product documents
+db.products.insertMany([
+    {
+        name: "Product 2",
+        price: 29.99,
+        category: "Clothing",
+        quantity: 50
+    },
+    {
+        name: "Product 3",
+        price: 9.99,
+        category: "Books",
+        quantity: 200
+    }
+])
+
+# Find all products
+db.products.find()
+
+# Find products in a specific category (e.g., Electronics)
+db.products.find({ category: "Electronics" })
+
+# Update the price of a product (e.g., "Product 1")
+db.products.updateOne(
+    { name: "Product 1" },
+    { $set: { price: 24.99 } }
+)
+
+# Update multiple products with low quantity
+db.products.updateMany(
+    { quantity: { $lt: 100 } },
+    { $set: { low_quantity: true } }
+)
+
+# Delete a product (e.g., "Product 2")
+db.products.deleteOne({ name: "Product 2" })
+
+# Delete products with low quantity
+db.products.deleteMany({ low_quantity: true })
+
+# Find all products after operations
+db.products.find()
+
+
